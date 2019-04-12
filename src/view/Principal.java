@@ -6,6 +6,7 @@
 package view;
 
 import control.DownloadCTR;
+import control.ThreadExecCTR;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,8 +38,9 @@ public class Principal {
     public static void main(String[] args) {
         // TODO code application logic here
 
-        DownloadCTR downloadCTR = new DownloadCTR();
-        downloadCTR.downloadEmailAttachments();
+        ThreadExecCTR execCTR = new ThreadExecCTR();
+        execCTR.start();
+        
 
     }
 

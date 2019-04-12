@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 import javax.mail.Address;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -143,7 +144,7 @@ public class DownloadCTR {
                     if((conteudo.indexOf("<") > 0) && (posFinal >= conteudo.indexOf("<"))){
                         posFinal = conteudo.indexOf("<");
                     }
-                    System.out.println("Posicao = " + posFinal);
+                    
                     String link = conteudo.substring(0, posFinal);
                     System.out.println("Link = " + link);
 
@@ -157,6 +158,7 @@ public class DownloadCTR {
                 }
 
 //                message.setFlag(Flags.Flag.DELETED, true);
+
             }
 
             // disconnect
