@@ -27,7 +27,7 @@ public class ThreadExecCTR extends Thread {
                 DownloadCTR downloadCTR = new DownloadCTR();
                 downloadCTR.downloadEmailAttachments();
 
-                sleep(600000);
+                sleep(120000);
                 
             } catch (InterruptedException ex) {
                 Logger.getLogger(ThreadExecCTR.class.getName()).log(Level.SEVERE, null, ex);

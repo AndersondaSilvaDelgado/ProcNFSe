@@ -125,7 +125,7 @@ public class DownloadCTR {
                 }
 
                 // print out details of each message
-                System.out.println("Message #" + (i + 1) + ":");
+//                System.out.println("Message #" + (i + 1) + ":");
 //                System.out.println("\t From: " + from);
 //                System.out.println("\t Subject: " + subject);
 //                System.out.println("\t Sent Date: " + sentDate);
@@ -133,7 +133,8 @@ public class DownloadCTR {
 
                 Log log = new Log();
                 log.setDtEncaminhado(sentDate);
-                log.setRemetenteEncaminhado(from);
+                String remEnc = from.substring(from.indexOf("<"));
+                log.setRemetenteEncaminhado(remEnc.replaceAll(">", "").replaceAll("<", ""));
                 log.setAssuntoEncaminhado(subject);
 
                 String conteudoLimpo = html2text(messageContent);
@@ -143,7 +144,7 @@ public class DownloadCTR {
                     String remOrig = conteudoLimpo.substring(conteudoLimpo.indexOf("De: "));
                     remOrig = remOrig.substring(4);
                     log.setRemetenteOriginal(remOrig.substring(0, remOrig.indexOf(" ")));
-                    String dataOrig = conteudoLimpo.substring(conteudoLimpo.indexOf("Enviada em: "));
+                    String dataOrig = conteudoLimpo.substring(conteudoLimpo.indexOf("Enviado: "));
                     dataOrig = dataOrig.substring(12);
                     dataOrig = dataOrig.substring(dataOrig.indexOf(", "));
                     dataOrig = dataOrig.substring(2);
@@ -230,7 +231,7 @@ public class DownloadCTR {
                     }
 
                     String link = conteudo.substring(0, posFinal);
-                    System.out.println("Link = " + link);
+//                    System.out.println("Link = " + link);
 
                     nome++;
                     if (!link.trim().equals("http://www.w3.org/1999/xhtml")) {
@@ -241,14 +242,15 @@ public class DownloadCTR {
 
                 }
 
-//                message.setFlag(Flags.Flag.DELETED, true);
+                message.setFlag(Flags.Flag.DELETED, true);
+                
             }
             // disconnect
             folderInbox.close(true);
             store.close();
 
         } catch (IOException | MessagingException ex) {
-            System.out.println("Erro = " + ex.toString());
+            System.out.println("" + ex.toString());
         }
     }
 
