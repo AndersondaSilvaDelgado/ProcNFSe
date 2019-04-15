@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  */
 public class Conn {
 
-    private int BD = 3;
+    private int BD = 2;
     public final static String driver = "oracle.jdbc.driver.OracleDriver";
     public final static String url_prod = "jdbc:oracle:thin:@(DESCRIPTION = (ENABLE = BROKEN)(FAILOVER = ON)(LOAD_BALANCE = YES)"
             + "    (ADDRESS = (PROTOCOL = TCP)(HOST = stafe-scan)(PORT = 1521))"
@@ -63,8 +63,8 @@ public class Conn {
             + "    )"
             + "  )";
 
-    public final static String usuario = "CPD";
-    public final static String senha = "WHM3957";
+    public final static String usuario = "INTERFACE";
+    public final static String senha = "FGBNY946";
 
     private Connection connection = null;
 

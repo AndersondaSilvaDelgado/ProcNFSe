@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import javax.mail.Address;
 import javax.mail.Flags;
@@ -22,6 +24,9 @@ import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
+import model.dao.LogDAO;
+import model.domain.Log;
+import org.jsoup.Jsoup;
 
 /**
  *
@@ -29,17 +34,20 @@ import javax.mail.internet.MimeBodyPart;
  */
 public class DownloadCTR {
 
-    private String saveDirectory = "C:/Attachment";
-    
+//    private String saveDirectory = "C:/Attachment";
+    private String saveDirectory = "M:";
+
     public DownloadCTR() {
     }
-    
+
     public void downloadEmailAttachments() {
 
         Properties properties = new Properties();
-        
-        final String username = "anderson@usinasantafe.com.br";
-        final String password = "Diasmelhores2";
+
+        final String username = "processamentonfse@usinasantafe.com.br";
+        final String password = "Sta9900";
+//        final String username = "anderson@usinasantafe.com.br";
+//        final String password = "Insonia123";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -68,18 +76,22 @@ public class DownloadCTR {
 
             int nome = 0;
 
-            for (int i = 0; i < arrayMessages.length; i++) {
+            String data = "dd/MM/yyyy";
+            String hora = "HH:mm:ss";
 
+            for (int i = 0; i < arrayMessages.length; i++) {
+//            for (int i = (arrayMessages.length - 1); i >= 0; i--) {
                 Message message = arrayMessages[i];
                 Address[] fromAddress = message.getFrom();
                 String from = fromAddress[0].toString();
                 String subject = message.getSubject();
-                String sentDate = message.getSentDate().toString();
+                SimpleDateFormat formata = new SimpleDateFormat(data);
+                String sentDate = formata.format(message.getSentDate());
 
                 String contentType = message.getContentType();
                 String messageContent = "";
-
                 // store attachment file name, separated by comma
+
                 String attachFiles = "";
 
                 if (contentType.contains("multipart")) {
@@ -117,7 +129,79 @@ public class DownloadCTR {
 //                System.out.println("\t From: " + from);
 //                System.out.println("\t Subject: " + subject);
 //                System.out.println("\t Sent Date: " + sentDate);
-//                System.out.println("\t Message: " + messageContent);
+//                System.out.println("\t Message: " + html2text(messageContent));
+
+                Log log = new Log();
+                log.setDtEncaminhado(sentDate);
+                log.setRemetenteEncaminhado(from);
+                log.setAssuntoEncaminhado(subject);
+
+                String conteudoLimpo = html2text(messageContent);
+
+                if (conteudoLimpo.contains("De: ")) {
+
+                    String remOrig = conteudoLimpo.substring(conteudoLimpo.indexOf("De: "));
+                    remOrig = remOrig.substring(4);
+                    log.setRemetenteOriginal(remOrig.substring(0, remOrig.indexOf(" ")));
+                    String dataOrig = conteudoLimpo.substring(conteudoLimpo.indexOf("Enviada em: "));
+                    dataOrig = dataOrig.substring(12);
+                    dataOrig = dataOrig.substring(dataOrig.indexOf(", "));
+                    dataOrig = dataOrig.substring(2);
+                    String dia = dataOrig.substring(0, dataOrig.indexOf(" "));
+                    dataOrig = dataOrig.substring(dataOrig.indexOf("de "));
+                    dataOrig = dataOrig.substring(3);
+                    String mes = dataOrig.substring(0, dataOrig.indexOf(" "));
+                    String numMes = "00";
+                    switch (mes.trim()) {
+                        case "janeiro":
+                            numMes = "01";
+                            break;
+                        case "jevereiro":
+                            numMes = "02";
+                            break;
+                        case "março":
+                            numMes = "03";
+                            break;
+                        case "abril":
+                            numMes = "04";
+                            break;
+                        case "maio":
+                            numMes = "05";
+                            break;
+                        case "junho":
+                            numMes = "06";
+                        case "julho":
+                            numMes = "07";
+                            break;
+                        case "agosto":
+                            numMes = "08";
+                            break;
+                        case "setembro":
+                            numMes = "09";
+                            break;
+                        case "outubro":
+                            numMes = "10";
+                            break;
+                        case "novembro":
+                            numMes = "11";
+                            break;
+                        case "dezembro":
+                            numMes = "12";
+                            break;
+                    }
+
+                    dataOrig = dataOrig.substring(dataOrig.indexOf("de "));
+                    dataOrig = dataOrig.substring(3);
+                    String ano = dataOrig.substring(0, dataOrig.indexOf(" "));
+
+                    log.setDtOriginal(dia + "/" + numMes + "/" + ano.trim());
+                    log.setAssuntoOriginal(subject.replaceAll("ENC: ", ""));
+
+                }
+
+                LogDAO logDAO = new LogDAO();
+                logDAO.inserirRegBD(log);
+
                 String conteudo = messageContent;
                 while (conteudo.contains("http://") || conteudo.contains("https://")) {
 
@@ -130,45 +214,44 @@ public class DownloadCTR {
                     } else {
                         conteudo = conteudo.substring(conteudo.indexOf("https://"));
                     }
-                    
+
                     int posFinal = 9999999;
-                    if((conteudo.indexOf((char) 10) > 0) && (posFinal >= conteudo.indexOf((char) 10))){
+                    if ((conteudo.indexOf((char) 10) > 0) && (posFinal >= conteudo.indexOf((char) 10))) {
                         posFinal = conteudo.indexOf((char) 10);
                     }
-                    if((conteudo.indexOf(" ") > 0) && (posFinal >= conteudo.indexOf(" "))){
+                    if ((conteudo.indexOf(" ") > 0) && (posFinal >= conteudo.indexOf(" "))) {
                         posFinal = conteudo.indexOf(" ");
                     }
-                    if((conteudo.indexOf("\"") > 0) && (posFinal >= conteudo.indexOf("\""))){
+                    if ((conteudo.indexOf("\"") > 0) && (posFinal >= conteudo.indexOf("\""))) {
                         posFinal = conteudo.indexOf("\"");
                     }
-                    if((conteudo.indexOf("<") > 0) && (posFinal >= conteudo.indexOf("<"))){
+                    if ((conteudo.indexOf("<") > 0) && (posFinal >= conteudo.indexOf("<"))) {
                         posFinal = conteudo.indexOf("<");
                     }
-                    
+
                     String link = conteudo.substring(0, posFinal);
                     System.out.println("Link = " + link);
 
                     nome++;
-                    if(!link.trim().equals("http://www.w3.org/1999/xhtml")){
+                    if (!link.trim().equals("http://www.w3.org/1999/xhtml")) {
                         gravaArquivoDeURL(link.trim(), saveDirectory, nome);
                     }
-                    
+
                     conteudo = conteudo.substring(posFinal);
 
                 }
 
 //                message.setFlag(Flags.Flag.DELETED, true);
-
             }
-
             // disconnect
             folderInbox.close(true);
             store.close();
+
         } catch (IOException | MessagingException ex) {
             System.out.println("Erro = " + ex.toString());
         }
     }
-    
+
     public String removerCaracteresEspeciais(String text) {
         StringBuilder stringBuilder = new StringBuilder(text.replaceAll("[^a-zZ-Z1-9 ]", ""));
         if (!text.equals("")) {
@@ -197,5 +280,9 @@ public class DownloadCTR {
         }
         return null;
     }
-    
+
+    public static String html2text(String html) {
+        return Jsoup.parse(html).text();
+    }
+
 }

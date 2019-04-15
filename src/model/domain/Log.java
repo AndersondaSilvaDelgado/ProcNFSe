@@ -11,7 +11,6 @@ package model.domain;
  */
 public class Log {
     
-    private String dthrProc;
     private String dtEncaminhado;
     private String remetenteEncaminhado;
     private String assuntoEncaminhado;
@@ -20,14 +19,6 @@ public class Log {
     private String assuntoOriginal;
 
     public Log() {
-    }
-
-    public String getDthrProc() {
-        return dthrProc;
-    }
-
-    public void setDthrProc(String dthrProc) {
-        this.dthrProc = dthrProc;
     }
 
     public String getDtEncaminhado() {

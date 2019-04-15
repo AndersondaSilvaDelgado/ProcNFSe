@@ -19,7 +19,7 @@ public class LogDAO {
     public int inserirRegBD(Log log) {
 
         String sql = "INSERT INTO "
-                + " CPD.PORTARIA_VISITA "
+                + " PROCNFEE_LOG "
                 + " ( "
                 + " DATA_HR_PROC "
                 + " , DATA_ENCAMINHADO "
@@ -31,15 +31,17 @@ public class LogDAO {
                 + " , SIT_PROC "
                 + " ) "
                 + " VALUES "
-                + " ( TO_DATE('" + log.getDthrProc() + "', 'DD/MM/YYYY HH24:MI:SS') "
+                + " ( SYSDATE "
                 + " , TO_DATE('" + log.getDtEncaminhado() + "', 'DD/MM/YYYY') "
-                + " , " + log.getRemetenteEncaminhado()
-                + " , " + log.getAssuntoEncaminhado()
+                + " , '" + log.getRemetenteEncaminhado() + "'"
+                + " , '" + log.getAssuntoEncaminhado() + "'"
                 + " , TO_DATE('" + log.getDtOriginal() + "', 'DD/MM/YYYY') "
-                + " , " + log.getRemetenteOriginal()
-                + " , " + log.getAssuntoOriginal()
+                + " , '" + log.getRemetenteOriginal() + "'"
+                + " , '" + log.getAssuntoOriginal() + "'"
                 + " , 1)";
 
+        //System.out.println("SQL: " + sql);
+        //return 0;
         return Conn.getInstance().manipBDDefault(sql);
 
     }
