@@ -267,14 +267,14 @@ public class DownloadCTR {
             URL url = new URL(stringUrl);
 //			String nomeArquivoLocal = url.getPath();
             InputStream is = url.openStream();
-            FileOutputStream fos = new FileOutputStream(saveDirectory + File.separator + nome + ".pdf");
+            FileOutputStream fos = new FileOutputStream(saveDirectory + File.separator + "integracao_" + nome + ".pdf");
             int umByte = 0;
             while ((umByte = is.read()) != -1) {
                 fos.write(umByte);
             }
             is.close();
             fos.close();
-            return new File(saveDirectory + File.separator + nome + ".pdf");
+            return new File(saveDirectory + File.separator + "integracao_" +  nome + ".pdf");
         } catch (Exception e) {
             //Lembre-se de tratar bem suas excecoes, ou elas tambem lhe tratarão mal!
             //Aqui so vamos mostrar o stack no stderr.

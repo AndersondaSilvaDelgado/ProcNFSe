@@ -19,7 +19,7 @@ public class LogDAO {
     public int inserirRegBD(Log log) {
 
         String sql = "INSERT INTO "
-                + " PROCNFEE_LOG "
+                + " PROCNFSE_LOG "
                 + " ( "
                 + " DATA_HR_PROC "
                 + " , DATA_ENCAMINHADO "
