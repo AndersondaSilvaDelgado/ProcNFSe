@@ -17,6 +17,8 @@ public class Log {
     private String dtOriginal;
     private String remetenteOriginal;
     private String assuntoOriginal;
+    private String sitProc;
+    private String descrDownload;
 
     public Log() {
     }
@@ -69,5 +71,22 @@ public class Log {
         this.assuntoOriginal = assuntoOriginal;
     }
 
+    public String getSitProc() {
+        return sitProc;
+    }
+
+    public void setSitProc(String sitProc) {
+        this.sitProc = sitProc;
+    }
+
+    public String getDescrDownload() {
+        return descrDownload;
+    }
+
+    public void setDescrDownload(String descrDownload) {
+        this.descrDownload = descrDownload;
+    }
     
+    
+
 }

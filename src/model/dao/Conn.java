@@ -133,6 +133,9 @@ public class Conn {
             if (stmt != null) {
                 stmt.close();
             }
+            
+            closeConnection();
+            instance = null;
 
         } catch (Exception e) {
             System.out.println(e.getMessage());

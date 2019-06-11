@@ -5,6 +5,7 @@
  */
 package control;
 
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,11 +25,14 @@ public class ThreadExecCTR extends Thread {
         while (true) {
             try {
 
+                System.out.println("Data e Hora = " + new Date());
+
                 DownloadCTR downloadCTR = new DownloadCTR();
                 downloadCTR.downloadEmailAttachments();
 
                 sleep(120000);
-                
+//                sleep(120000000);
+
             } catch (InterruptedException ex) {
                 Logger.getLogger(ThreadExecCTR.class.getName()).log(Level.SEVERE, null, ex);
             }

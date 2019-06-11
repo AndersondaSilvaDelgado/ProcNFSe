@@ -29,18 +29,20 @@ public class LogDAO {
                 + " , REMETENTE_ORIGINAL "
                 + " , ASSUNTO_ORIGINAL "
                 + " , SIT_PROC "
+                + " , DESCR_ARQUIVO "
                 + " ) "
                 + " VALUES "
                 + " ( SYSDATE "
-                + " , TO_DATE('" + log.getDtEncaminhado() + "', 'DD/MM/YYYY') "
+                + " , TO_DATE('" + log.getDtEncaminhado() + "', 'DD/MM/YYYY HH24:MI:SS') "
                 + " , '" + log.getRemetenteEncaminhado() + "'"
                 + " , '" + log.getAssuntoEncaminhado() + "'"
-                + " , TO_DATE('" + log.getDtOriginal() + "', 'DD/MM/YYYY') "
+                + " , TO_DATE('" + log.getDtOriginal() + "', 'DD/MM/YYYY HH24:MI:SS') "
                 + " , '" + log.getRemetenteOriginal() + "'"
                 + " , '" + log.getAssuntoOriginal() + "'"
-                + " , 1)";
+                + " , '" + log.getSitProc() + "'"
+                + " , '" + log.getDescrDownload() + "')";
 
-        //System.out.println("SQL: " + sql);
+        System.out.println("SQL: " + sql);
         //return 0;
         return Conn.getInstance().manipBDDefault(sql);
 
