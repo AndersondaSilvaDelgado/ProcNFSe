@@ -5,10 +5,15 @@
  */
 package control;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.Image;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -30,7 +35,16 @@ import model.domain.Log;
 import org.jsoup.Jsoup;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import org.apache.http.Consts;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 
 /**
  *
@@ -38,9 +52,11 @@ import java.util.Random;
  */
 public class DownloadCTR {
 
-//    private String saveDirectory = "C:/Attachment";
-    private String saveDirectory = "M:";
+//    private String saveDirectory = "C:/Attachment"; //DEV
+//    private String saveDirectory = "M:" //QA
+    private String saveDirectory = "N:"; //PROD
     private static final int BUFFER_SIZE = 4096;
+//    private static final int BUFFER_SIZE = 20480;
     private int nome = 0;
     private Log log;
 
@@ -91,7 +107,8 @@ public class DownloadCTR {
                 String from = fromAddress[0].toString();
                 String subject = message.getSubject();
                 SimpleDateFormat formata = new SimpleDateFormat(data);
-                String sentDate = formata.format(message.getSentDate());
+//                String sentDate = formata.format(message.getSentDate());
+                String sentDate = formata.format(message.getReceivedDate());
 
                 log.setDtEncaminhado(sentDate);
                 log.setRemetenteEncaminhado("nfeservico@usinasantafe.com.br");
@@ -312,9 +329,18 @@ public class DownloadCTR {
                             && (!link.trim().contains("youtube"))
                             && (!link.trim().contains("outlook"))
                             && (!link.trim().contains("instagram"))
-                            && (!link.trim().contains("youtu.be"))) {
+                            && (!link.trim().contains("youtu.be"))
+                            && (!link.trim().contains("sendgrid.net"))
+                            && (!link.trim().contains("fastsolutions.com"))
+                            && (!link.trim().contains("usinasantafe.com"))) {
 
-                        downloadFile(link.trim(), saveDirectory, nome);
+                        if (link.trim().contains("ginfes")) {
+                            downloadGinfes(link.trim(), saveDirectory, nome);
+                        } else if (link.trim().contains("nfe.prefeitura.sp.gov.br/nfe.aspx")) {
+                            downloadPrefeituraSP(link.trim(), saveDirectory, nome);
+                        } else {
+                            downloadFile(link.trim(), saveDirectory, nome);
+                        }
 
                     }
 
@@ -331,6 +357,19 @@ public class DownloadCTR {
             }
 
             folderInbox.close(true);
+            
+            Folder folderLix = store.getFolder("Itens Excluídos");
+            folderLix.open(Folder.READ_WRITE);
+
+            Message[] arrayMessagesLix = folderLix.getMessages();
+
+            for (int i = 0; i < arrayMessagesLix.length; i++) {
+                Message message = arrayMessagesLix[i];
+                message.setFlag(Flags.Flag.DELETED, true);
+            }
+            
+            folderLix.close(true);
+            
             store.close();
 
         } catch (Exception ex) {
@@ -389,7 +428,6 @@ public class DownloadCTR {
 
                 if (contentType.contains("application/pdf")) {
 
-                    System.out.println("URL = " + url + " - PDF");
                     InputStream inputStream = httpConn.getInputStream();
                     String saveFilePath = saveDir + File.separator + fileName;
 
@@ -406,7 +444,7 @@ public class DownloadCTR {
 
                     System.out.println("File downloaded");
                     log.setSitProc("FOI SALVO ANEXO");
-                    log.setDescrDownload(saveDirectory + File.separator + "integracao_" + fileName);
+                    log.setDescrDownload(saveDirectory + File.separator + fileName);
                     LogDAO logDAO = new LogDAO();
                     logDAO.inserirRegBD(log);
 
@@ -426,6 +464,200 @@ public class DownloadCTR {
         }
     }
 
+    public void downloadGinfes(String fileURL, String saveDir, int nome) {
+        String line = "", all = "";
+        BufferedReader in = null;
+        try {
+            URL urlInicial = new URL(fileURL.replaceAll("amp;", ""));
+            in = new BufferedReader(new InputStreamReader(urlInicial.openStream()));
+
+            while ((line = in.readLine()) != null) {
+                all += line;
+            }
+//            
+//            System.out.println("----------------------------------------");
+//            System.out.println(urlInicial);
+//            System.out.println("----------------------------------------");
+//            System.out.println(all);
+//            System.out.println("------------------------------------------");
+            
+            System.out.println("" + all.substring(all.indexOf("'") + 1, all.lastIndexOf("'")));
+            
+            String urlPag = all.substring(all.indexOf("'") + 1, all.lastIndexOf("'"));
+            
+            in = null;
+            
+            URL url2 = new URL(urlPag.replaceAll("amp;", ""));
+            in = new BufferedReader(new InputStreamReader(url2.openStream(),"ISO-8859-1"));
+
+            boolean verNF = false;
+            String nfs = "";
+            String nomeRelatorio = "";
+            
+            while ((line = in.readLine()) != null) {
+                if(line.contains("name=\"nfs\"")){
+                    verNF = true;
+                }
+                if(verNF){
+                    nfs += line;
+                }
+                if(line.contains("</input>")){
+                    verNF = false;
+                }
+                if(line.contains("name=\"nomeRelatorio\"")){
+                    nomeRelatorio = line;
+                }
+            }
+
+//            System.out.println("----------------------------------------");
+//            System.out.println(nfs.replaceAll("<input type=\"hidden\" name=\"nfs\" value=\"", "").replaceAll("\"></input>", ""));
+//            System.out.println("------------------------------------------");
+//            System.out.println(nomeRelatorio.replaceAll("<input type=\"hidden\" name=\"nomeRelatorio\" value=\"", "").replaceAll("\"></input>", ""));
+//            System.out.println("------------------------------------------");
+            
+            HttpPost post = new HttpPost("http://visualizar.ginfes.com.br/report/exportacao");
+
+            List<NameValuePair> nameValuePairs
+                    = new ArrayList<NameValuePair>();
+            nameValuePairs.add(new BasicNameValuePair("nfs", nfs.replaceAll("<input type=\"hidden\" name=\"nfs\" value=\"", "").replaceAll("\"></input>", "")));
+            nameValuePairs.add(new BasicNameValuePair("nomeRelatorio", nomeRelatorio.replaceAll("<input type=\"hidden\" name=\"nomeRelatorio\" value=\"", "").replaceAll("\"></input>", "")));
+            nameValuePairs.add(new BasicNameValuePair("imprime", "0"));
+            nameValuePairs.add(new BasicNameValuePair("tipo", "pdf"));
+
+            post.setEntity(new UrlEncodedFormEntity(nameValuePairs, Consts.UTF_8));
+
+            post.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 5.1; rv:18.0) Gecko/20100101 Firefox/18.0");
+            post.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            DefaultHttpClient client = new DefaultHttpClient();
+            HttpResponse response = client.execute(post);
+
+            System.out.println("Retorno: " + response.toString());
+            
+            if (post.getEntity() != null){
+                post.getEntity().consumeContent();
+            }
+            
+            client.clearResponseInterceptors();
+            client.clearRequestInterceptors();
+            client.close();
+            
+            String ret = response.toString().substring(response.toString().indexOf("Location"));
+            ret = ret.substring(0, ret.indexOf(",")).replaceAll("Location: ", "");
+            
+            HttpURLConnection httpConn = null;
+
+            URL url = new URL(ret.replaceAll("amp;", ""));
+            System.out.println("URL = " + url);
+            httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setConnectTimeout(2 * 60 * 1000);
+            httpConn.setReadTimeout(2 * 60 * 1000);
+            int responseCode = httpConn.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                
+                String fileName = "integracao_" + nome + ".pdf";
+                String disposition = httpConn.getHeaderField("Content-Disposition");
+                String contentType = httpConn.getContentType();
+                int contentLength = httpConn.getContentLength();
+
+                InputStream inputStream = httpConn.getInputStream();
+
+                String saveFilePath = saveDir + File.separator + fileName;
+                FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+
+                int bytesRead = -1;
+                byte[] buffer = new byte[BUFFER_SIZE];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                outputStream.close();
+                inputStream.close();
+                
+                System.out.println("File downloaded");
+                log.setSitProc("FOI SALVO ANEXO");
+                log.setDescrDownload(saveDirectory + File.separator + fileName);
+                LogDAO logDAO = new LogDAO();
+                logDAO.inserirRegBD(log);
+
+            }
+
+            httpConn.disconnect();
+        } catch (Exception ex) {
+            System.out.println("Falha no execução = " + ex);
+        } finally {
+            
+        }
+        
+    }
+    
+    public int downloadPrefeituraSP(String fileURL, String saveDir, int nome) {
+        HttpURLConnection httpConn = null;
+        try {
+
+            String urlString = fileURL.replaceAll("amp;", "").replaceAll("https://nfe.prefeitura.sp.gov.br/nfe.aspx?", "");
+            System.out.println("URL Cortado = " + urlString);
+            urlString = "https://nfe.prefeitura.sp.gov.br/contribuinte/notaprintimg.aspx" + urlString + "&imprimir=1";
+            System.out.println("URL = " + urlString);
+            URL url = new URL(urlString);
+            httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setConnectTimeout(2 * 60 * 1000);
+            httpConn.setReadTimeout(2 * 60 * 1000);
+            int responseCode = httpConn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                String fileName = "";
+                String disposition = httpConn.getHeaderField("Content-Disposition");
+                String contentType = httpConn.getContentType();
+                int contentLength = httpConn.getContentLength();
+
+                fileName = "integracao_" + nome + ".gif";
+
+                InputStream inputStream = httpConn.getInputStream();
+                String saveFilePath = "C:/Users/download.notas/Documents" + File.separator + fileName;
+
+                FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+
+                int bytesRead = -1;
+                byte[] buffer = new byte[BUFFER_SIZE];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                outputStream.close();
+                inputStream.close();
+
+                Document document = new Document();
+                FileOutputStream fos = new FileOutputStream(saveDir + File.separator + "integracao_" + nome + ".pdf");
+                PdfWriter writer = PdfWriter.getInstance(document, fos);
+                writer.open();
+                document.open();
+                Image img = Image.getInstance(saveFilePath);
+                img.scalePercent(50, 50);
+                document.add(img);
+                document.close();
+                writer.close();
+
+                System.out.println("File downloaded");
+                log.setSitProc("FOI SALVO ANEXO");
+                log.setDescrDownload(saveDirectory + File.separator + fileName);
+                LogDAO logDAO = new LogDAO();
+                logDAO.inserirRegBD(log);
+
+            } else {
+                System.out.println("No file to download. Server replied HTTP code: " + responseCode);
+            }
+            httpConn.disconnect();
+        } catch (Exception ex) {
+            System.out.println("Falha no execução = " + ex);
+        } finally {
+            if (httpConn != null) {
+                httpConn.disconnect();
+            }
+            return 1;
+        }
+    }
+    
     public String convert(MimeBodyPart part) {
         String ret = "";
         try{

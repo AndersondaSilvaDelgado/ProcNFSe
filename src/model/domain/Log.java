@@ -86,7 +86,4 @@ public class Log {
     public void setDescrDownload(String descrDownload) {
         this.descrDownload = descrDownload;
     }
-    
-    
-
 }

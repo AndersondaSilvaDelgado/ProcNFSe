@@ -8,6 +8,7 @@ package control;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import model.dao.UltCapturaDAO;
 
 /**
  *
@@ -30,6 +31,9 @@ public class ThreadExecCTR extends Thread {
                 DownloadCTR downloadCTR = new DownloadCTR();
                 downloadCTR.downloadEmailAttachments();
 
+                UltCapturaDAO ultCapturaDAO = new UltCapturaDAO();
+                ultCapturaDAO.updateRegBD();
+                
                 sleep(120000);
 //                sleep(120000000);
 

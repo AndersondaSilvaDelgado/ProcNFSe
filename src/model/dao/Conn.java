@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  */
 public class Conn {
 
-    private int BD = 2;
+    private int BD = 1;
     public final static String driver = "oracle.jdbc.driver.OracleDriver";
     public final static String url_prod = "jdbc:oracle:thin:@(DESCRIPTION = (ENABLE = BROKEN)(FAILOVER = ON)(LOAD_BALANCE = YES)"
             + "    (ADDRESS = (PROTOCOL = TCP)(HOST = stafe-scan)(PORT = 1521))"
