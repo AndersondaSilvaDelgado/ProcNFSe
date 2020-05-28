@@ -29,7 +29,7 @@ public class ThreadExecCTR extends Thread {
                 System.out.println("Data e Hora = " + new Date());
 
                 DownloadCTR downloadCTR = new DownloadCTR();
-                downloadCTR.downloadEmailAttachments();
+                downloadCTR.abreCaixaEmail();
 
                 UltCapturaDAO ultCapturaDAO = new UltCapturaDAO();
                 ultCapturaDAO.updateRegBD();

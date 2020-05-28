@@ -7,11 +7,13 @@ package model.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import oracle.jdbc.OraclePreparedStatement;
 
 /**
  *
@@ -19,7 +21,7 @@ import java.util.logging.Logger;
  */
 public class Conn {
 
-    private int BD = 1;
+    private int BD = 2;
     public final static String driver = "oracle.jdbc.driver.OracleDriver";
     public final static String url_prod = "jdbc:oracle:thin:@(DESCRIPTION = (ENABLE = BROKEN)(FAILOVER = ON)(LOAD_BALANCE = YES)"
             + "    (ADDRESS = (PROTOCOL = TCP)(HOST = stafe-scan)(PORT = 1521))"
@@ -143,4 +145,27 @@ public class Conn {
         return r;
     }
 
+    public int manipBDClob(String sql, String txt) {
+        int r = 0;
+        try {
+            PreparedStatement ps = getConnection().prepareStatement(sql);
+            ((OraclePreparedStatement) ps).setStringForClob(1, txt);
+            ps.execute();
+            
+            r = 1;
+            
+            if (ps != null) {
+                ps.close();
+            }
+            
+            closeConnection();
+            instance = null;
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            
+        }
+        return r;
+    }
+    
 }

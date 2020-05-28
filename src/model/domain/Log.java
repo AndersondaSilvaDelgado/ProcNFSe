@@ -19,7 +19,8 @@ public class Log {
     private String assuntoOriginal;
     private String sitProc;
     private String descrDownload;
-
+    private String detalhe;
+    
     public Log() {
     }
 
@@ -86,4 +87,15 @@ public class Log {
     public void setDescrDownload(String descrDownload) {
         this.descrDownload = descrDownload;
     }
+
+    public String getDetalhe() {
+        return detalhe;
+    }
+
+    public void setDetalhe(String detalhe) {
+        this.detalhe = detalhe;
+    }
+    
+    
+    
 }

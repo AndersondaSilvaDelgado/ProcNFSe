@@ -30,6 +30,7 @@ public class LogDAO {
                 + " , ASSUNTO_ORIGINAL "
                 + " , SIT_PROC "
                 + " , DESCR_ARQUIVO "
+                + " , DETALHES "
                 + " ) "
                 + " VALUES "
                 + " ( SYSDATE "
@@ -40,11 +41,12 @@ public class LogDAO {
                 + " , '" + log.getRemetenteOriginal() + "'"
                 + " , '" + log.getAssuntoOriginal() + "'"
                 + " , '" + log.getSitProc() + "'"
-                + " , '" + log.getDescrDownload() + "')";
+                + " , '" + log.getDescrDownload() + "'"
+                + " , ?)";
 
         System.out.println("SQL: " + sql);
         //return 0;
-        return Conn.getInstance().manipBDDefault(sql);
+        return Conn.getInstance().manipBDClob(sql, log.getDetalhe());
 
     }
 

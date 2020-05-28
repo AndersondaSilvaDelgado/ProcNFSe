@@ -16,7 +16,7 @@ public class UltCapturaDAO {
 
         String sql = "UPDATE PROCNFEE_ULT_CAPTURA SET DTHR = SYSDATE, ENVIO_EMAIL = 0 ";
 
-        System.out.println("SQL: " + sql);
+//        System.out.println("SQL: " + sql);
         return Conn.getInstance().manipBDDefault(sql);
 
     }
