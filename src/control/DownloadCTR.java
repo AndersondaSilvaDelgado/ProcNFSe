@@ -10,12 +10,14 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.Image;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -41,6 +43,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.mail.MessagingException;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -48,6 +51,12 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.JavascriptExecutor;
 
 /**
  *
@@ -55,11 +64,17 @@ import org.apache.http.message.BasicNameValuePair;
  */
 public class DownloadCTR {
 
-    private String saveDirecPrinc = "C:/Users/download.notas/Documents/nf_bkp";
+    private String saveDirecCopia = "C:/Attachment";
 //    private String saveDirectory = "C:/Attachment"; //DEV
+//    private String saveDirecPrinc = "C:/Attachment";
+    private String saveDirecPrinc = "\\\\wntvmsesuite\\Dados_SESuite\\NucleoFiscal\\Captura\\NOTAS-FISCAIS-DE-SERVICO";
     private String saveFilePath;
 //    private String saveDirectory = "M:" //QA
-    private String saveDirectory = "N:"; //PROD
+//    private String saveDirectory = "N:"; //PROD
+//    private String saveDirecPrinc = "N:";
+//      private String saveDirectory = "\\\\wntvmsesuite\\Dados_SESuite\\NucleoFiscal\\Captura\\NOTAS-FISCAIS-DE-SERVICO"; //PROD
+//      private String saveDirecPrinc = "\\\\wntvmsesuite\\Dados_SESuite\\NucleoFiscal\\Captura\\NOTAS-FISCAIS-DE-SERVICO";
+     
     private static final int BUFFER_SIZE = 4096;
 //    private static final int BUFFER_SIZE = 20480;
     private int nome = 0;
@@ -107,17 +122,17 @@ public class DownloadCTR {
 
             folderInbox.close(true);
 
-            Folder folderLix = store.getFolder("Itens Excluídos");
-            folderLix.open(Folder.READ_WRITE);
-
-            Message[] arrayMessagesLix = folderLix.getMessages();
-
-            for (int i = 0; i < arrayMessagesLix.length; i++) {
-                Message message = arrayMessagesLix[i];
-                message.setFlag(Flags.Flag.DELETED, true);
-            }
-
-            folderLix.close(true);
+//            Folder folderLix = store.getFolder("Itens Excluídos");
+//            folderLix.open(Folder.READ_WRITE);
+//
+//            Message[] arrayMessagesLix = folderLix.getMessages();
+//
+//            for (int i = 0; i < arrayMessagesLix.length; i++) {
+//                Message message = arrayMessagesLix[i];
+//                message.setFlag(Flags.Flag.DELETED, true);
+//            }
+//
+//            folderLix.close(true);
 
             store.close();
 
@@ -133,6 +148,7 @@ public class DownloadCTR {
         String hora = "HH:mm:ss";
 
         try {
+            
             for (int i = 0; i < arrayMessages.length; i++) {
                 
                 log = new Log();
@@ -146,7 +162,7 @@ public class DownloadCTR {
 
                 log.setDtEncaminhado(sentDate);
                 log.setRemetenteEncaminhado("nfeservico@usinasantafe.com.br");
-                log.setAssuntoEncaminhado(removerCaracteresEspeciais(subject));
+                log.setAssuntoEncaminhado(subject);
 
                 if (from.contains("<")) {
                     String remEnc = from.substring(from.indexOf("<"));
@@ -155,7 +171,7 @@ public class DownloadCTR {
                     log.setRemetenteOriginal(from);
                 }
 
-                log.setAssuntoOriginal(removerCaracteresEspeciais(subject));
+                log.setAssuntoOriginal(subject);
                 log.setDtOriginal(sentDate);
                 log.setSitProc("NÃO FOI SALVO ANEXO");
                 log.setDescrDownload("");
@@ -230,13 +246,12 @@ public class DownloadCTR {
                 String conteudo = messageContent;
                 verLinkEmail(conteudo, sentDate);
 
-                if (log.getSitProc().equals("NÃO FOI SALVO ANEXO")) {
-                    LogDAO logDAO = new LogDAO();
-                    logDAO.inserirRegBD(log);
-                }
+                salvaLog();
 
                 message.setFlag(Flags.Flag.DELETED, true);
+                
             }
+            
         } catch (Exception ex) {
             System.out.println("Erro" + ex.toString());
         }
@@ -324,7 +339,9 @@ public class DownloadCTR {
                     downloadBetha(link.trim());
                 } else if (link.trim().contains("simplissweb")) {
                     downloadSimpliss(link.trim());
-                } else {
+                } else if (link.trim().contains("www.issnetonline.com.br/ribeiraopreto")){
+                    downloadRibeiraoPreto(link.trim());
+                }  else {
                     downloadLink(link.trim());
                 }
 
@@ -345,6 +362,51 @@ public class DownloadCTR {
 
     private String html2text(String html) {
         return Jsoup.parse(html).text();
+    }
+    
+    private void downloadRibeiraoPreto(String fileURL){
+        
+        try {
+            
+            String phantomjsExeutableFilePath = "C:/oracle/phantomjs.exe";
+            System.setProperty("phantomjs.binary.path", phantomjsExeutableFilePath);
+            
+            // Initiate PhantomJSDriver.
+            WebDriver driver = new PhantomJSDriver();
+            
+            Dimension a = new Dimension(700, 800);
+            driver.manage().window().setSize(a);
+            
+            driver.get(fileURL);
+            
+            
+            saveFilePath = File.separator + "integracao_" + nome + ".jpg";
+            String saveFilePathGIF = saveDirecCopia + saveFilePath;
+            
+            File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            FileUtils.copyFile(scrFile, new File(saveFilePathGIF), true);
+            
+            saveFilePath = File.separator + "integracao_" + nome + ".pdf";
+            
+            Document document = new Document();
+            FileOutputStream fos = new FileOutputStream(saveDirecPrinc + saveFilePath);
+
+            PdfWriter writer = PdfWriter.getInstance(document, fos);
+            writer.open();
+            document.open();
+            Image img = Image.getInstance(saveFilePathGIF);
+            img.setAbsolutePosition(-60, -50);
+            img.scalePercent(80, 90);
+            document.add(img);
+            document.close();
+            writer.close();
+            
+        }catch (Exception ex) {
+            System.out.println("Falha no execução = " + ex);
+            log.setDetalhe(log.getDetalhe() + "\nFalha no execução = " + ex);
+        } finally {
+        }
+                
     }
 
     private void downloadGinfes(String fileURL) {
@@ -434,11 +496,11 @@ public class DownloadCTR {
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
 
-                saveFilePath = saveDirecPrinc + File.separator + "integracao_" + fileName;
+                saveFilePath = File.separator + "integracao_" + nome + ".pdf";
                 log.setDetalhe(log.getDetalhe() + "\nFile = " + saveFilePath);
 
                 InputStream inputStream = httpConn.getInputStream();
-                FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+                FileOutputStream outputStream = new FileOutputStream(saveDirecPrinc + saveFilePath);
 
                 int bytesRead = -1;
                 byte[] buffer = new byte[BUFFER_SIZE];
@@ -451,7 +513,7 @@ public class DownloadCTR {
 
                 System.out.println("File downloaded");
                 log.setSitProc("FOI SALVO ANEXO");
-                log.setDescrDownload(saveFilePath);
+                log.setDescrDownload(log.getDescrDownload() + " - " + saveDirecPrinc +  saveFilePath);
                 copiaArq();
 
             } else {
@@ -463,7 +525,6 @@ public class DownloadCTR {
             System.out.println("Falha no execução = " + ex);
             log.setDetalhe(log.getDetalhe() + "\nFalha no execução = " + ex);
         } finally {
-            salvaLog();
         }
         
     }
@@ -483,12 +544,13 @@ public class DownloadCTR {
             httpConn.setConnectTimeout(2 * 60 * 1000);
             httpConn.setReadTimeout(2 * 60 * 1000);
             int responseCode = httpConn.getResponseCode();
+            
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 
-                fileName = "integracao_" + nome + ".gif";
-                InputStream inputStream = httpConn.getInputStream();
-                String saveFilePathGIF = "C:/Users/download.notas/Documents/gif" + File.separator + fileName;
+                saveFilePath = File.separator + "integracao_" + nome + ".gif";
+                String saveFilePathGIF = saveDirecCopia + saveFilePath;
 
+                InputStream inputStream = httpConn.getInputStream();
                 FileOutputStream outputStream = new FileOutputStream(saveFilePathGIF);
 
                 int bytesRead = -1;
@@ -501,12 +563,11 @@ public class DownloadCTR {
                 inputStream.close();
 
                 log.setDetalhe(log.getDetalhe() + "\nSaveFilePathGIF = " + saveFilePathGIF);
-                fileName = "integracao_" + nome + ".pdf";
-                saveFilePath = saveDirecPrinc + File.separator + "integracao_" + fileName;
+                saveFilePath = File.separator + "integracao_" + nome + ".pdf";
                 log.setDetalhe(log.getDetalhe() + "\nFile = " + saveFilePath);
                 
                 Document document = new Document();
-                FileOutputStream fos = new FileOutputStream(saveFilePath);
+                FileOutputStream fos = new FileOutputStream(saveDirecPrinc + saveFilePath);
                 PdfWriter writer = PdfWriter.getInstance(document, fos);
                 writer.open();
                 document.open();
@@ -519,7 +580,7 @@ public class DownloadCTR {
                 System.out.println("File downloaded");
                 log.setDetalhe(log.getDetalhe() + "\nFile = " + saveFilePath);
                 log.setSitProc("FOI SALVO ANEXO");
-                log.setDescrDownload(saveFilePath);
+                log.setDescrDownload(log.getDescrDownload() + " - " + saveDirecPrinc + saveFilePath);
                 copiaArq();
 
             } else {
@@ -534,7 +595,6 @@ public class DownloadCTR {
             if (httpConn != null) {
                 httpConn.disconnect();
             }
-            salvaLog();
             return 1;
         }
     }
@@ -573,52 +633,44 @@ public class DownloadCTR {
     }
 
     private void copiaArq() {
-        FileReader fis = null;
-        try {
-            File arquivoOrigem = new File(saveDirecPrinc + File.separator + "integracao_" + fileName);
-            fis = new FileReader(arquivoOrigem);
-            BufferedReader bufferedReader = new BufferedReader(fis);
-            StringBuilder buffer = new StringBuilder();
-            String line = "";
-            while ((line = bufferedReader.readLine()) != null) {
-                buffer.append(line).append("\n");
+        
+	try {
+            
+            InputStream inputStream = new FileInputStream(saveDirecPrinc + saveFilePath);
+            FileOutputStream outputStream = new FileOutputStream(saveDirecCopia + saveFilePath);
+            
+            int bytesRead = -1;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
             }
-            fis.close();
-            bufferedReader.close();
-            File arquivoDestino = new File(saveDirectory + File.separator + "integracao_" + fileName);
-            FileWriter writer = new FileWriter(arquivoDestino);
-            writer.write(buffer.toString());
-            writer.flush();
-            writer.close();
-        } catch (Exception ex) {
-            System.out.println("Erro = " + ex);
-        } finally {
-            try {
-                if(fis != null){
-                    fis.close();
-                }
-            } catch (Exception ex) {
-                System.out.println("Erro = " + ex);
-            }
-        }
-
+            
+            inputStream.close();
+            outputStream.close();
+            
+            System.out.println("SALVOU COPIA = " + saveDirecCopia + saveFilePath);
+            
+	} catch (Exception e) {
+            System.out.println("Erro = " + e);
+	}
+        
     }
     
     private void salvaAnexo(MimeBodyPart part){
         try {
             fileName = ((fileName.length() < 30) ? fileName : (fileName.substring(0, 30) + ".pdf"));
-            saveFilePath = saveDirecPrinc + File.separator + "integracao_" + fileName;
-            log.setDetalhe(log.getDetalhe() + "\nFile = " + saveFilePath);
-            part.saveFile(saveFilePath);
-            System.out.println("Salvou = " + saveFilePath);
+            saveFilePath = File.separator + "integracao_" + fileName;
+            log.setDetalhe(log.getDetalhe() + "\nFile = " + saveDirecPrinc + saveFilePath);
+            part.saveFile(saveDirecPrinc + saveFilePath);
+            System.out.println("Salvou = " + saveDirecPrinc + saveFilePath);
             log.setSitProc("FOI SALVO ANEXO");
-            log.setDescrDownload(saveFilePath);
+            log.setDescrDownload(log.getDescrDownload() + " - " + saveDirecPrinc + saveFilePath);
             copiaArq();
         } catch (Exception ex) {
             System.out.println("Erro = " + ex);
             log.setDetalhe(log.getDetalhe() + "Erro = " + ex);
         } finally{
-            salvaLog();
         }
     }
     
@@ -640,16 +692,15 @@ public class DownloadCTR {
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
 
-                fileName = "";
                 String contentType = httpConn.getContentType();
 
                 if (contentType.contains("application/pdf")) {
 
-                    saveFilePath = saveDirecPrinc + File.separator + "integracao_" + fileName;
+                    saveFilePath = File.separator + "integracao_" + nome + ".pdf";
                     log.setDetalhe(log.getDetalhe() + "\nFile = " + saveFilePath);
                     
                     InputStream inputStream = httpConn.getInputStream();
-                    FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+                    FileOutputStream outputStream = new FileOutputStream(saveDirecPrinc + saveFilePath);
 
                     int bytesRead = -1;
                     byte[] buffer = new byte[BUFFER_SIZE];
@@ -662,8 +713,9 @@ public class DownloadCTR {
 
                     System.out.println("File downloaded");
                     log.setSitProc("FOI SALVO ANEXO");
-                    log.setDescrDownload(saveFilePath);
-
+                    log.setDescrDownload(log.getDescrDownload() + " - " + saveDirecPrinc + saveFilePath);
+                    copiaArq();
+                    
                 }
                 else{
                     log.setDetalhe(log.getDetalhe() + "\ncontentType =  " + contentType);
@@ -682,7 +734,6 @@ public class DownloadCTR {
             if (httpConn != null) {
                 httpConn.disconnect();
             }
-            salvaLog();
             return 1;
         }
     }

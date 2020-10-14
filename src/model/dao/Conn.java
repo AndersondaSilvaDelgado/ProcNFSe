@@ -77,9 +77,9 @@ public class Conn {
     }
 
     public static Conn getInstance() {
-        if (instance == null) {
+//        if (instance == null) {
             instance = new Conn();
-        }
+//        }
         return instance;
     }
 

@@ -5,7 +5,12 @@
  */
 package model.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import model.domain.Log;
+import oracle.jdbc.OraclePreparedStatement;
 
 /**
  *
@@ -17,8 +22,13 @@ public class LogDAO {
     }
 
     public int inserirRegBD(Log log) {
+        
+        Connection conn = null;
+        PreparedStatement ps = null;
 
-        String sql = "INSERT INTO "
+        try {
+            
+            String sql = "INSERT INTO "
                 + " PROCNFSE_LOG "
                 + " ( "
                 + " DATA_HR_PROC "
@@ -44,9 +54,39 @@ public class LogDAO {
                 + " , '" + log.getDescrDownload() + "'"
                 + " , ?)";
 
-        System.out.println("SQL: " + sql);
-        //return 0;
-        return Conn.getInstance().manipBDClob(sql, log.getDetalhe());
+            System.out.println("SQL: " + sql);
+        
+            conn = Conn.getInstance().getConnection();
+            ps = conn.prepareStatement(sql);
+            ((OraclePreparedStatement) ps).setStringForClob(1, log.getDetalhe());
+            ps.execute();
+            
+        } catch (Exception e) {
+            System.out.println("Erro1 = " + e);
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception er) {
+                System.out.println("Erro2 = " + er);
+            }
+        } finally{
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Erro3 = " + e);
+            }
+        }
+        
+        return 1;
 
     }
 

@@ -41,11 +41,6 @@ public class Principal {
         ThreadExecCTR execCTR = new ThreadExecCTR();
         execCTR.start();
         
-
     }
-
-
-
-
 
 }
